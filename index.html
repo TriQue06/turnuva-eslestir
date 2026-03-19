@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnuva Eşleştirme Programı</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .settings-bar {
+            display: flex;
+            gap: 20px;
+            background: #eef2f5;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .settings-bar input {
+            width: 60px;
+            padding: 5px;
+        }
+        .main-layout {
+            display: flex;
+            gap: 30px;
+        }
+        .left-panel {
+            flex: 1;
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        .right-panel {
+            flex: 2;
+        }
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="number"].group-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-width: 120px;
+        }
+        select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .btn-generate {
+            background-color: #27ae60;
+            font-size: 16px;
+            padding: 12px 20px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .btn-generate:hover {
+            background-color: #219653;
+        }
+        .btn-match {
+            background-color: #8e44ad;
+            font-size: 16px;
+            padding: 12px 20px;
+            width: 100%;
+            margin-top: 20px;
+            display: none;
+        }
+        .btn-match:hover {
+            background-color: #732d91;
+        }
+        .btn-delete {
+            background-color: #e74c3c;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        .player-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #eee;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+        .teams-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .team-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .team-card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 16px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        .team-member {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .team-member:last-child {
+            border-bottom: none;
+        }
+        .skill-badge {
+            background: #eef2f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+        }
+        .group-badge {
+            background: #f1c40f;
+            color: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .matches-section {
+            margin-top: 30px;
+        }
+        .match-card {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .match-team {
+            flex: 1;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        .match-vs {
+            padding: 0 20px;
+            font-weight: 900;
+            color: #e74c3c;
+            font-size: 18px;
+        }
+        .match-card small {
+            display: block;
+            font-weight: normal;
+            color: #7f8c8d;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Turnuva Eşleştirme Programı</h1>
+
+    <div class="settings-bar">
+        <label>Takım Sayısı: <input type="number" id="numTeams" value="3" min="1"></label>
+        <label>Takımdaki Oyuncu: <input type="number" id="teamSize" value="3" min="1"></label>
+        <span id="playerCountStatus" style="margin-left:auto; font-weight:bold; color:#7f8c8d;">Eklenen Oyuncu: 0 / 9</span>
+    </div>
+
+    <div class="main-layout">
+        <div class="left-panel">
+            <h3>Oyuncu Ekle</h3>
+            <div class="input-group">
+                <input type="text" id="playerName" placeholder="Oyuncu Adı" autocomplete="off">
+                <select id="playerSkill">
+                    <option value="1">1 (Acemi)</option>
+                    <option value="2">2 (Orta)</option>
+                    <option value="3" selected>3 (Usta)</option>
+                </select>
+                <input type="number" id="playerGroup" class="group-input" placeholder="Grup No (İsteğe Bağlı)" min="1">
+                <button onclick="addPlayer()" style="width: 100%;">Listeye Ekle</button>
+            </div>
+            
+            <ul class="player-list" id="playerList">
+                </ul>
+        </div>
+
+        <div class="right-panel">
+            <button class="btn-generate" onclick="generateTeams()">Takımları Hesapla / Oluştur</button>
+            <div class="teams-container" id="teamsContainer">
+                </div>
+
+            <button class="btn-match" id="btnMatch" onclick="generateMatches()">Oluşan Takımları Eşleştir (Fikstür)</button>
+            <div class="matches-section" id="matchesContainer">
+                </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let players = [];
+    let playerIdCounter = 0;
+    let globalTeams = []; // Oluşturulan takımları maçlar için saklarız
+
+    function updateStatus() {
+        const numTeams = parseInt(document.getElementById('numTeams').value) || 0;
+        const teamSize = parseInt(document.getElementById('teamSize').value) || 0;
+        const required = numTeams * teamSize;
+        const statusEl = document.getElementById('playerCountStatus');
+        
+        statusEl.textContent = `Eklenen Oyuncu: ${players.length} / ${required}`;
+        if (players.length === required && required > 0) {
+            statusEl.style.color = '#27ae60';
+        } else {
+            statusEl.style.color = '#7f8c8d';
+        }
+    }
+
+    document.getElementById('numTeams').addEventListener('input', updateStatus);
+    document.getElementById('teamSize').addEventListener('input', updateStatus);
+
+    function addPlayer() {
+        const nameInput = document.getElementById('playerName');
+        const skillInput = document.getElementById('playerSkill');
+        const groupInput = document.getElementById('playerGroup');
+        
+        const name = nameInput.value.trim();
+        const skill = parseInt(skillInput.value);
+        const groupId = groupInput.value.trim() !== '' ? parseInt(groupInput.value) : null;
+
+        if (!name) {
+            alert("Lütfen bir oyuncu adı girin.");
+            return;
+        }
+
+        players.push({
+            id: ++playerIdCounter,
+            name: name,
+            skill: skill,
+            groupId: groupId
+        });
+
+        nameInput.value = '';
+        groupInput.value = '';
+        nameInput.focus();
+        renderPlayers();
+    }
+
+    function removePlayer(id) {
+        players = players.filter(p => p.id !== id);
+        renderPlayers();
+    }
+
+    function changeSkill(id, newSkill) {
+        const player = players.find(p => p.id === id);
+        if (player) player.skill = parseInt(newSkill);
+    }
+
+    function renderPlayers() {
+        const list = document.getElementById('playerList');
+        list.innerHTML = '';
+
+        players.forEach(player => {
+            const groupTag = player.groupId ? `<span class="group-badge">Grup ${player.groupId}</span>` : '';
+            const li = document.createElement('li');
+            li.className = 'player-item';
+            
+            li.innerHTML = `
+                <div>
+                    <span style="font-weight:500;">${player.name}</span>
+                    ${groupTag}
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <select onchange="changeSkill(${player.id}, this.value)">
+                        <option value="1" ${player.skill === 1 ? 'selected' : ''}>1</option>
+                        <option value="2" ${player.skill === 2 ? 'selected' : ''}>2</option>
+                        <option value="3" ${player.skill === 3 ? 'selected' : ''}>3</option>
+                    </select>
+                    <button class="btn-delete" onclick="removePlayer(${player.id})">Sil</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+
+        updateStatus();
+    }
+
+    function generateTeams() {
+        const numTeams = parseInt(document.getElementById('numTeams').value);
+        const teamSize = parseInt(document.getElementById('teamSize').value);
+        const requiredPlayers = numTeams * teamSize;
+
+        if (players.length !== requiredPlayers) {
+            alert(`Takımları oluşturmak için ${requiredPlayers} oyuncuya ihtiyaç var. Şu an ${players.length} oyuncu eklendi.`);
+            return;
+        }
+
+        // Arayüzü temizle
+        document.getElementById('matchesContainer').innerHTML = '';
+        document.getElementById('btnMatch').style.display = 'none';
+
+        // 1. Oyuncuları bağımsızlar ve gruplar olarak ayır
+        const groups = {};
+        const independents = [];
+
+        // Karıştırıp ayırıyoruz ki eşitlik durumunda rastgelelik sağlansın
+        let shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+
+        shuffledPlayers.forEach(p => {
+            if (p.groupId) {
+                if (!groups[p.groupId]) groups[p.groupId] = [];
+                groups[p.groupId].push(p);
+            } else {
+                independents.push(p);
+            }
+        });
+
+        // Hata kontrolü: Herhangi bir grup takım kapasitesinden büyük mü?
+        for (const gId in groups) {
+            if (groups[gId].length > teamSize) {
+                alert(`Hata: ${gId} numaralı gruptaki oyuncu sayısı (${groups[gId].length}), takım kapasitesinden (${teamSize}) fazla!`);
+                return;
+            }
+        }
+
+        let teams = Array.from({ length: numTeams }, () => ({ players: [], skillSum: 0 }));
+
+        // 2. Önce GRUPLARI yerleştir
+        const groupArray = Object.values(groups).map(gPlayers => ({
+            players: gPlayers,
+            skillSum: gPlayers.reduce((sum, p) => sum + p.skill, 0),
+            size: gPlayers.length
+        }));
+
+        // Grupları toplam ustalığına göre büyükten küçüğe sırala
+        groupArray.sort((a, b) => b.skillSum - a.skillSum);
+
+        for (const group of groupArray) {
+            // Grubun sığabileceği takımları bul
+            let availableTeams = teams.filter(t => t.players.length + group.size <= teamSize);
+            
+            if (availableTeams.length === 0) {
+                alert("Uyarı: Grupların boyutu mevcut boşluklara uymuyor. Lütfen grupları küçültün veya takım kapasitesini artırın.");
+                return;
+            }
+            // En düşük ustalık toplamına sahip takıma yerleştir
+            availableTeams.sort((a, b) => a.skillSum - b.skillSum);
+            availableTeams[0].players.push(...group.players);
+            availableTeams[0].skillSum += group.skillSum;
+        }
+
+        // 3. Kalan BAĞIMSIZ oyuncuları yerleştir
+        independents.sort((a, b) => b.skill - a.skill);
+
+        independents.forEach(player => {
+            let availableTeams = teams.filter(t => t.players.length < teamSize);
+            availableTeams.sort((a, b) => a.skillSum - b.skillSum);
+            availableTeams[0].players.push(player);
+            availableTeams[0].skillSum += player.skill;
+        });
+
+        globalTeams = teams;
+        renderTeams(teams);
+        document.getElementById('btnMatch').style.display = 'block'; // Eşleştirme butonunu göster
+    }
+
+    function renderTeams(teams) {
+        const container = document.getElementById('teamsContainer');
+        container.innerHTML = '';
+
+        teams.forEach((team, index) => {
+            const average = (team.skillSum / team.players.length).toFixed(1);
+            const teamCard = document.createElement('div');
+            teamCard.className = 'team-card';
+            
+            let playersHtml = team.players.map(p => `
+                <div class="team-member">
+                    <span>${p.name} ${p.groupId ? `<span style="font-size:10px; color:#f39c12;">(G${p.groupId})</span>` : ''}</span>
+                    <span class="skill-badge">Güç: ${p.skill}</span>
+                </div>
+            `).join('');
+
+            teamCard.innerHTML = `
+                <h3>Takım ${index + 1} <span style="float:right; font-size:12px; color:#7f8c8d; margin-top:2px;">Ort: ${average}</span></h3>
+                <div class="team-players">
+                    ${playersHtml}
+                </div>
+            `;
+            container.appendChild(teamCard);
+        });
+    }
+
+    function generateMatches() {
+        if (globalTeams.length < 2) {
+            alert("Eşleştirme yapmak için en az 2 takım olmalıdır.");
+            return;
+        }
+
+        // Maçları dengelemek için takımları ortalamalarına göre sırala
+        let teamsForMatch = globalTeams.map((t, index) => ({
+            originalIndex: index + 1,
+            average: t.skillSum / t.players.length
+        }));
+
+        // Ortalama güce göre sıralama (birbirine en yakın güçtekiler eşleşsin diye)
+        teamsForMatch.sort((a, b) => b.average - a.average);
+
+        const container = document.getElementById('matchesContainer');
+        container.innerHTML = '<h2 style="text-align:center; color:#2c3e50;">Maç Fikstürü</h2>';
+
+        for (let i = 0; i < teamsForMatch.length; i += 2) {
+            if (i + 1 < teamsForMatch.length) {
+                const t1 = teamsForMatch[i];
+                const t2 = teamsForMatch[i+1];
+                container.innerHTML += `
+                    <div class="match-card">
+                        <div class="match-team">Takım ${t1.originalIndex} <small>Ortalama Güç: ${t1.average.toFixed(1)}</small></div>
+                        <div class="match-vs">VS</div>
+                        <div class="match-team">Takım ${t2.originalIndex} <small>Ortalama Güç: ${t2.average.toFixed(1)}</small></div>
+                    </div>
+                `;
+            } else {
+                // Eğer takım sayısı tek ise, sonuncu takım bay geçer
+                const t1 = teamsForMatch[i];
+                container.innerHTML += `
+                    <div class="match-card" style="background-color: #fdfae6; border-color: #f1c40f;">
+                        <div class="match-team">Takım ${t1.originalIndex} <small>Ortalama Güç: ${t1.average.toFixed(1)}</small></div>
+                        <div class="match-vs" style="font-size: 16px; color:#f39c12;">BAY GEÇTİ (Rakip Yok)</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Eşleşme tamamlandığında sayfayı aşağı kaydır
+        container.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
