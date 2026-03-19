@@ -5,15 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Turnuva Eşleştirme Programı</title>
     <style>
+        /* ÖZEL FONT TANIMLAMASI */
+        @font-face {
+            font-family: 'ProductSans';
+            src: url('ProductSans-Bold.ttf') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'ProductSans', Tahoma, sans-serif;
             background-color: #f4f7f6;
             color: #333;
             margin: 0;
             padding: 20px;
         }
         .container {
-            max-width: 1050px;
+            max-width: 1100px;
             margin: 0 auto;
             background: #fff;
             padding: 20px;
@@ -24,6 +32,7 @@
             text-align: center;
             color: #2c3e50;
             margin-bottom: 30px;
+            font-size: 28px;
         }
         .settings-bar {
             display: flex;
@@ -37,6 +46,7 @@
         .settings-bar input {
             width: 60px;
             padding: 5px;
+            font-family: 'ProductSans', sans-serif;
         }
         .main-layout {
             display: flex;
@@ -64,17 +74,13 @@
             gap: 10px;
             margin-bottom: 20px;
         }
-        input[type="text"] {
+        input[type="text"], select {
             flex: 1;
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 4px;
             min-width: 120px;
-        }
-        select {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            font-family: 'ProductSans', sans-serif;
         }
         button {
             background-color: #3498db;
@@ -84,6 +90,7 @@
             border-radius: 4px;
             cursor: pointer;
             transition: background 0.3s;
+            font-family: 'ProductSans', sans-serif;
         }
         button:hover {
             background-color: #2980b9;
@@ -100,11 +107,13 @@
         }
         .btn-match {
             background-color: #8e44ad;
-            font-size: 16px;
-            padding: 12px 20px;
+            font-size: 18px;
+            padding: 15px 20px;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 30px;
+            margin-bottom: 15px;
             display: none;
+            box-shadow: 0 4px 6px rgba(142, 68, 173, 0.3);
         }
         .btn-match:hover {
             background-color: #732d91;
@@ -149,7 +158,7 @@
         .team-card h3 {
             margin-top: 0;
             color: #2c3e50;
-            font-size: 16px;
+            font-size: 18px;
             border-bottom: 2px solid #3498db;
             padding-bottom: 5px;
         }
@@ -159,6 +168,7 @@
             align-items: center;
             padding: 5px 0;
             border-bottom: 1px dashed #eee;
+            font-size: 14px;
         }
         .team-member:last-child {
             border-bottom: none;
@@ -167,8 +177,7 @@
             background: #eef2f5;
             padding: 2px 6px;
             border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
+            font-size: 13px;
             color: #555;
         }
         .group-badge {
@@ -176,46 +185,12 @@
             padding: 3px 7px;
             border-radius: 4px;
             font-size: 11px;
-            font-weight: bold;
             margin-left: 6px;
             text-shadow: 0px 1px 2px rgba(0,0,0,0.4);
             display: inline-block;
         }
-        .matches-section {
-            margin-top: 30px;
-        }
-        .match-card {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #fff;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 2px solid #bdc3c7;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .match-team {
-            flex: 1;
-            text-align: center;
-            font-weight: bold;
-            font-size: 16px;
-            color: #2c3e50;
-        }
-        .match-vs {
-            padding: 0 20px;
-            font-weight: 900;
-            color: #e74c3c;
-            font-size: 18px;
-        }
-        .match-card small {
-            display: block;
-            font-weight: normal;
-            color: #7f8c8d;
-            font-size: 13px;
-            margin-top: 5px;
-        }
-        /* Yeni Grup Renk Ayarları */
+        
+        /* Grup Renk Ayarları (Sol Panel) */
         .group-color-row {
             margin-bottom: 12px;
             padding-bottom: 12px;
@@ -227,30 +202,102 @@
             padding-bottom: 0;
         }
         .group-name-label {
-            font-weight: bold;
-            font-size: 13px;
+            font-size: 14px;
             margin-bottom: 5px;
             display: block;
         }
         .color-swatch-container {
             display: flex;
+            flex-wrap: wrap;
             gap: 6px;
         }
         .color-swatch {
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid transparent;
             transition: transform 0.2s;
         }
-        .color-swatch:hover {
-            transform: scale(1.1);
-        }
+        .color-swatch:hover { transform: scale(1.15); }
         .color-swatch.selected {
             border-color: #2c3e50;
-            transform: scale(1.15);
-            box-shadow: 0 0 4px rgba(0,0,0,0.3);
+            transform: scale(1.2);
+            box-shadow: 0 0 5px rgba(0,0,0,0.4);
+        }
+
+        /* YENİ FİKSTÜR VE MAÇ KARTLARI ESTETİĞİ */
+        .matches-section {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .match-row {
+            display: flex;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid #eaeaea;
+        }
+        .match-team-panel {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: background 0.3s;
+        }
+        .match-vs-col {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 25px;
+            font-size: 26px;
+            color: #e74c3c;
+            background: #fdfdfd;
+            border-left: 1px dashed #ddd;
+            border-right: 1px dashed #ddd;
+            text-shadow: 2px 2px 0px #fff;
+        }
+        .match-team-title {
+            font-size: 20px;
+            margin: 0 0 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .match-player-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 15px;
+        }
+        
+        /* Güç Grafiği Barı */
+        .power-graph-container {
+            margin-top: auto; /* Kartın en altına iter */
+            padding-top: 20px;
+        }
+        .power-graph-label {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .power-graph-bg {
+            height: 12px;
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .power-graph-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease-in-out, background-color 0.3s;
         }
     </style>
 </head>
@@ -262,13 +309,13 @@
     <div class="settings-bar">
         <label>Takım Sayısı: <input type="number" id="numTeams" value="3" min="1"></label>
         <label>Takımdaki Oyuncu: <input type="number" id="teamSize" value="3" min="1"></label>
-        <span id="playerCountStatus" style="margin-left:auto; font-weight:bold; color:#7f8c8d;">Eklenen Oyuncu: 0 / 9</span>
+        <span id="playerCountStatus" style="margin-left:auto; font-size: 18px; color:#7f8c8d;">Eklenen Oyuncu: 0 / 9</span>
     </div>
 
     <div class="main-layout">
         <div class="left-panel">
             <div class="panel-box">
-                <h3 style="margin-top:0;">Oyuncu Ekle</h3>
+                <h3 style="margin-top:0; font-size: 20px;">Oyuncu Ekle</h3>
                 <div class="input-group">
                     <input type="text" id="playerName" placeholder="Oyuncu Adı" autocomplete="off">
                     <select id="playerSkill">
@@ -277,7 +324,7 @@
                         <option value="3" selected>3 (Usta)</option>
                     </select>
                     <input type="text" id="playerGroup" placeholder="Grup Adı (İsteğe Bağlı)" autocomplete="off">
-                    <button onclick="addPlayer()" style="width: 100%;">Listeye Ekle</button>
+                    <button onclick="addPlayer()" style="width: 100%; font-size: 16px; padding: 10px;">Listeye Ekle</button>
                 </div>
                 
                 <ul class="player-list" id="playerList">
@@ -285,7 +332,7 @@
             </div>
 
             <div class="panel-box" id="groupColorsPanel" style="display: none;">
-                <h3 style="margin-top:0; font-size:15px;">Grup Renkleri</h3>
+                <h3 style="margin-top:0; font-size: 18px;">Grup Renkleri</h3>
                 <div id="groupColorsContainer">
                     </div>
             </div>
@@ -296,7 +343,7 @@
             <div class="teams-container" id="teamsContainer">
                 </div>
 
-            <button class="btn-match" id="btnMatch" onclick="generateMatches()">Oluşan Takımları Eşleştir (Fikstür)</button>
+            <button class="btn-match" id="btnMatch" onclick="generateMatchesUI()">Oluşan Takımları Eşleştir (Fikstür)</button>
             <div class="matches-section" id="matchesContainer">
                 </div>
         </div>
@@ -310,18 +357,10 @@
 
     // Özel, canlı ve birbirinden farklı 10 renk
     const PRESET_COLORS = [
-        '#ff4757', // Kırmızı
-        '#1e90ff', // Mavi
-        '#2ed573', // Yeşil
-        '#ffa502', // Turuncu
-        '#9b59b6', // Mor
-        '#ff6b81', // Pembe
-        '#1abc9c', // Turkuaz
-        '#eccc68', // Sarı
-        '#3742fa', // Lacivert
-        '#c23616'  // Bordo
+        '#ff4757', '#1e90ff', '#2ed573', '#ffa502', '#9b59b6', 
+        '#ff6b81', '#1abc9c', '#f1c40f', '#3742fa', '#c23616'
     ];
-    let groupColors = {}; // Hangi grubun hangi rengi kullandığını tutar
+    let groupColors = {}; 
 
     function updateStatus() {
         const numTeams = parseInt(document.getElementById('numTeams').value) || 0;
@@ -354,11 +393,9 @@
             return;
         }
 
-        // Eğer yeni bir grup eklendiyse ona otomatik renk ata
         if (groupName && !groupColors[groupName]) {
             let usedColors = Object.values(groupColors);
             let availableColors = PRESET_COLORS.filter(c => !usedColors.includes(c));
-            // Eğer boş renk kalmadıysa başa dönüp ilk rengi ata
             groupColors[groupName] = availableColors.length > 0 ? availableColors[0] : PRESET_COLORS[0];
         }
 
@@ -389,18 +426,18 @@
         if (player) player.skill = parseInt(newSkill);
     }
 
-    // Grup rengini değiştirme fonksiyonu
     function changeGroupColor(groupName, newColor) {
         groupColors[groupName] = newColor;
         renderGroupPanel();
         renderPlayers();
-        // Eğer takımlar zaten oluşturulduysa, renkleri takımlarda da güncelle
         if (globalTeams.length > 0) {
             renderTeams(globalTeams);
+            if(document.getElementById('matchesContainer').innerHTML !== '') {
+                generateMatchesUI();
+            }
         }
     }
 
-    // Listede oyuncusu kalmayan grupları sistemden temizler
     function cleanUpGroups() {
         const activeGroups = new Set(players.filter(p => p.groupName).map(p => p.groupName));
         for (let gName in groupColors) {
@@ -466,7 +503,7 @@
             
             li.innerHTML = `
                 <div>
-                    <span style="font-weight:500;">${player.name}</span>
+                    <span>${player.name}</span>
                     ${groupTag}
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
@@ -529,9 +566,8 @@
 
         for (const group of groupArray) {
             let availableTeams = teams.filter(t => t.players.length + group.size <= teamSize);
-            
             if (availableTeams.length === 0) {
-                alert("Uyarı: Grupların boyutu mevcut boşluklara uymuyor. Lütfen grupları küçültün veya takım kapasitesini artırın.");
+                alert("Uyarı: Grupların boyutu mevcut boşluklara uymuyor.");
                 return;
             }
             availableTeams.sort((a, b) => a.skillSum - b.skillSum);
@@ -540,12 +576,19 @@
         }
 
         independents.sort((a, b) => b.skill - a.skill);
-
         independents.forEach(player => {
             let availableTeams = teams.filter(t => t.players.length < teamSize);
             availableTeams.sort((a, b) => a.skillSum - b.skillSum);
             availableTeams[0].players.push(player);
             availableTeams[0].skillSum += player.skill;
+        });
+
+        // Takımlara Fikstür için Başlangıç Rengi ve Ortalama Atama
+        teams.forEach((t, i) => {
+            t.originalIndex = i + 1;
+            t.average = t.skillSum / t.players.length;
+            // Takımlara rastgele farklı renkler ata (ilk 10 renkten)
+            t.fixtureColor = PRESET_COLORS[i % PRESET_COLORS.length]; 
         });
 
         globalTeams = teams;
@@ -557,8 +600,7 @@
         const container = document.getElementById('teamsContainer');
         container.innerHTML = '';
 
-        teams.forEach((team, index) => {
-            const average = (team.skillSum / team.players.length).toFixed(1);
+        teams.forEach((team) => {
             const teamCard = document.createElement('div');
             teamCard.className = 'team-card';
             
@@ -571,13 +613,13 @@
                 return `
                 <div class="team-member">
                     <div>${p.name} ${groupTag}</div>
-                    <span class="skill-badge">Güç: ${p.skill}</span>
+                    <span class="skill-badge">⭐ ${p.skill}</span>
                 </div>
                 `;
             }).join('');
 
             teamCard.innerHTML = `
-                <h3>Takım ${index + 1} <span style="float:right; font-size:12px; color:#7f8c8d; margin-top:2px;">Ort: ${average}</span></h3>
+                <h3>Takım ${team.originalIndex} <span style="float:right; font-size:14px; color:#7f8c8d; margin-top:2px;">Ort: ${team.average.toFixed(1)}</span></h3>
                 <div class="team-players">
                     ${playersHtml}
                 </div>
@@ -586,39 +628,91 @@
         });
     }
 
-    function generateMatches() {
+    // Fikstürdeki takım rengini değiştiren fonksiyon
+    function changeFixtureTeamColor(teamOriginalIndex, newColor) {
+        const team = globalTeams.find(t => t.originalIndex === teamOriginalIndex);
+        if (team) {
+            team.fixtureColor = newColor;
+            generateMatchesUI(); // Fikstürü yeni renkle tekrar çiz
+        }
+    }
+
+    // Fikstürdeki tek bir takım panelinin HTML'ini üreten yardımcı fonksiyon
+    function getTeamFixtureHTML(team) {
+        let playersHtml = team.players.map(p => {
+            let groupTag = p.groupName ? `<span class="group-badge" style="background-color: ${groupColors[p.groupName]}">${p.groupName}</span>` : '';
+            return `<div class="match-player-row"><span>${p.name} ${groupTag}</span> <span>⭐ ${p.skill}</span></div>`;
+        }).join('');
+
+        // Takım rengini ayarlamak için mini palet
+        let colorPickerHtml = PRESET_COLORS.map(c => 
+            `<div class="color-swatch ${c === team.fixtureColor ? 'selected' : ''}" 
+                  style="background-color: ${c}; width: 14px; height: 14px;" 
+                  onclick="changeFixtureTeamColor(${team.originalIndex}, '${c}')"></div>`
+        ).join('');
+
+        // Maksimum ustalık 3 olduğu için yüzde hesaplaması: (ortalama / 3) * 100
+        let powerPercentage = (team.average / 3) * 100;
+
+        // Estetik detaylar: Seçilen renge göre border, shadow ve hafif arkaplan rengi
+        return `
+        <div class="match-team-panel" style="border-top: 5px solid ${team.fixtureColor}; background: linear-gradient(180deg, ${team.fixtureColor}10 0%, transparent 40%);">
+            <div class="match-team-title">
+                <span style="color: ${team.fixtureColor};">Takım ${team.originalIndex}</span>
+                <div class="color-swatch-container" style="gap:4px;">${colorPickerHtml}</div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                ${playersHtml}
+            </div>
+
+            <div class="power-graph-container">
+                <div class="power-graph-label">
+                    <span>Takım Gücü</span>
+                    <span style="color: ${team.fixtureColor}; font-size: 15px;">${team.average.toFixed(2)} / 3.00</span>
+                </div>
+                <div class="power-graph-bg">
+                    <div class="power-graph-fill" style="width: ${powerPercentage}%; background-color: ${team.fixtureColor}; box-shadow: 0 0 8px ${team.fixtureColor};"></div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    function generateMatchesUI() {
         if (globalTeams.length < 2) {
             alert("Eşleştirme yapmak için en az 2 takım olmalıdır.");
             return;
         }
 
-        let teamsForMatch = globalTeams.map((t, index) => ({
-            originalIndex: index + 1,
-            average: t.skillSum / t.players.length
-        }));
-
+        // Kopya dizi üzerinden sıralama yapıyoruz
+        let teamsForMatch = [...globalTeams];
         teamsForMatch.sort((a, b) => b.average - a.average);
 
         const container = document.getElementById('matchesContainer');
-        container.innerHTML = '<h2 style="text-align:center; color:#2c3e50;">Maç Fikstürü</h2>';
+        container.innerHTML = '<h2 style="text-align:center; color:#2c3e50; font-size: 24px;">Turnuva Fikstürü</h2>';
 
         for (let i = 0; i < teamsForMatch.length; i += 2) {
             if (i + 1 < teamsForMatch.length) {
                 const t1 = teamsForMatch[i];
                 const t2 = teamsForMatch[i+1];
+                
                 container.innerHTML += `
-                    <div class="match-card">
-                        <div class="match-team">Takım ${t1.originalIndex} <small>Ortalama Güç: ${t1.average.toFixed(1)}</small></div>
-                        <div class="match-vs">VS</div>
-                        <div class="match-team">Takım ${t2.originalIndex} <small>Ortalama Güç: ${t2.average.toFixed(1)}</small></div>
+                    <div class="match-row">
+                        ${getTeamFixtureHTML(t1)}
+                        <div class="match-vs-col">VS</div>
+                        ${getTeamFixtureHTML(t2)}
                     </div>
                 `;
             } else {
                 const t1 = teamsForMatch[i];
                 container.innerHTML += `
-                    <div class="match-card" style="background-color: #fdfae6; border-color: #f1c40f;">
-                        <div class="match-team">Takım ${t1.originalIndex} <small>Ortalama Güç: ${t1.average.toFixed(1)}</small></div>
-                        <div class="match-vs" style="font-size: 16px; color:#f39c12;">BAY GEÇTİ (Rakip Yok)</div>
+                    <div class="match-row" style="border-color: #f1c40f;">
+                        ${getTeamFixtureHTML(t1)}
+                        <div class="match-vs-col" style="color: #f39c12; font-size: 20px;">BAY GEÇTİ</div>
+                        <div class="match-team-panel" style="background: #fdfae6; display:flex; align-items:center; justify-content:center; color:#7f8c8d;">
+                            Bu turda rakibi yok
+                        </div>
                     </div>
                 `;
             }
