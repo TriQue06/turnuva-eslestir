@@ -126,6 +126,30 @@
         .btn-delete:hover {
             background-color: #c0392b;
         }
+        
+        /* JSON İndir/Yükle Butonları */
+        .json-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ccc;
+        }
+        .btn-json {
+            flex: 1;
+            background-color: #34495e;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-json:hover {
+            background-color: #2c3e50;
+        }
+
         .player-list {
             list-style: none;
             padding: 0;
@@ -190,7 +214,6 @@
             display: inline-block;
         }
         
-        /* Grup Renk Ayarları (Sol Panel) */
         .group-color-row {
             margin-bottom: 12px;
             padding-bottom: 12px;
@@ -226,7 +249,6 @@
             box-shadow: 0 0 5px rgba(0,0,0,0.4);
         }
 
-        /* YENİ FİKSTÜR VE MAÇ KARTLARI ESTETİĞİ */
         .matches-section {
             margin-top: 10px;
             display: flex;
@@ -276,9 +298,8 @@
             font-size: 15px;
         }
         
-        /* Güç Grafiği Barı */
         .power-graph-container {
-            margin-top: auto; /* Kartın en altına iter */
+            margin-top: auto; 
             padding-top: 20px;
         }
         .power-graph-label {
@@ -317,35 +338,45 @@
             <div class="panel-box">
                 <h3 style="margin-top:0; font-size: 20px;">Oyuncu Ekle</h3>
                 <div class="input-group">
-                    <input type="text" id="playerName" placeholder="Oyuncu Adı" autocomplete="off">
+                    <input type="text" id="playerName" placeholder="Oyuncu Adı (Enter'a bas)" autocomplete="off">
                     <select id="playerSkill">
-                        <option value="1">1 (Acemi)</option>
-                        <option value="2">2 (Orta)</option>
-                        <option value="3" selected>3 (Usta)</option>
+                        <option value="1">1 (Giriş)</option>
+                        <option value="2">2 (Acemi)</option>
+                        <option value="3" selected>3 (Orta)</option>
+                        <option value="4">4 (Yüksek)</option>
+                        <option value="5">5 (Pro)</option>
                     </select>
                     <input type="text" id="playerGroup" placeholder="Grup Adı (İsteğe Bağlı)" autocomplete="off">
                     <button onclick="addPlayer()" style="width: 100%; font-size: 16px; padding: 10px;">Listeye Ekle</button>
                 </div>
                 
                 <ul class="player-list" id="playerList">
-                    </ul>
+                </ul>
+
+                <div class="json-controls">
+                    <button class="btn-json" onclick="exportJSON()">💾 Yedeği İndir (.json)</button>
+                    <label class="btn-json">
+                        📂 Yedeği Yükle
+                        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importJSON(event)">
+                    </label>
+                </div>
             </div>
 
             <div class="panel-box" id="groupColorsPanel" style="display: none;">
                 <h3 style="margin-top:0; font-size: 18px;">Grup Renkleri</h3>
                 <div id="groupColorsContainer">
-                    </div>
+                </div>
             </div>
         </div>
 
         <div class="right-panel">
             <button class="btn-generate" onclick="generateTeams()">Takımları Hesapla / Oluştur</button>
             <div class="teams-container" id="teamsContainer">
-                </div>
+            </div>
 
             <button class="btn-match" id="btnMatch" onclick="generateMatchesUI()">Oluşan Takımları Eşleştir (Fikstür)</button>
             <div class="matches-section" id="matchesContainer">
-                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -355,12 +386,35 @@
     let playerIdCounter = 0;
     let globalTeams = []; 
 
-    // Özel, canlı ve birbirinden farklı 10 renk
+    // Ustalık seviyesi isimleri
+    const skillNames = {
+        1: "Giriş",
+        2: "Acemi",
+        3: "Orta",
+        4: "Yüksek",
+        5: "Pro"
+    };
+
     const PRESET_COLORS = [
         '#ff4757', '#1e90ff', '#2ed573', '#ffa502', '#9b59b6', 
         '#ff6b81', '#1abc9c', '#f1c40f', '#3742fa', '#c23616'
     ];
     let groupColors = {}; 
+
+    // --- KLAVYE (ENTER) KISAYOLLARI ---
+    document.getElementById('playerName').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('playerGroup').focus();
+        }
+    });
+
+    document.getElementById('playerGroup').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addPlayer();
+        }
+    });
 
     function updateStatus() {
         const numTeams = parseInt(document.getElementById('numTeams').value) || 0;
@@ -390,6 +444,7 @@
 
         if (!name) {
             alert("Lütfen bir oyuncu adı girin.");
+            nameInput.focus();
             return;
         }
 
@@ -406,6 +461,7 @@
             groupName: groupName !== '' ? groupName : null
         });
 
+        // Eklendikten sonra kutuları temizle ve yeniden "Ad" kutusuna odaklan
         nameInput.value = '';
         groupInput.value = '';
         nameInput.focus();
@@ -445,6 +501,51 @@
                 delete groupColors[gName];
             }
         }
+    }
+
+    // --- JSON İNDİRME / YÜKLEME ---
+    function exportJSON() {
+        if(players.length === 0) {
+            alert("İndirilecek oyuncu bulunmuyor.");
+            return;
+        }
+        const data = {
+            players: players,
+            groupColors: groupColors,
+            playerIdCounter: playerIdCounter
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href",     dataStr);
+        downloadAnchorNode.setAttribute("download", "turnuva_yedek.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    function importJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.players) players = data.players;
+                if (data.groupColors) groupColors = data.groupColors;
+                if (data.playerIdCounter) playerIdCounter = data.playerIdCounter;
+                
+                renderGroupPanel();
+                renderPlayers();
+                
+                // Aynı dosyanın tekrar seçilebilmesi için input değerini sıfırla
+                document.getElementById('importFile').value = '';
+                alert('Yedek başarıyla yüklendi!');
+            } catch (error) {
+                alert('Dosya okunurken bir hata oluştu. Geçerli bir .json dosyası seçtiğinizden emin olun.');
+            }
+        };
+        reader.readAsText(file);
     }
 
     function renderGroupPanel() {
@@ -508,9 +609,11 @@
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
                     <select onchange="changeSkill(${player.id}, this.value)">
-                        <option value="1" ${player.skill === 1 ? 'selected' : ''}>1</option>
-                        <option value="2" ${player.skill === 2 ? 'selected' : ''}>2</option>
-                        <option value="3" ${player.skill === 3 ? 'selected' : ''}>3</option>
+                        <option value="1" ${player.skill === 1 ? 'selected' : ''}>1 (Giriş)</option>
+                        <option value="2" ${player.skill === 2 ? 'selected' : ''}>2 (Acemi)</option>
+                        <option value="3" ${player.skill === 3 ? 'selected' : ''}>3 (Orta)</option>
+                        <option value="4" ${player.skill === 4 ? 'selected' : ''}>4 (Yüksek)</option>
+                        <option value="5" ${player.skill === 5 ? 'selected' : ''}>5 (Pro)</option>
                     </select>
                     <button class="btn-delete" onclick="removePlayer(${player.id})">Sil</button>
                 </div>
@@ -583,11 +686,9 @@
             availableTeams[0].skillSum += player.skill;
         });
 
-        // Takımlara Fikstür için Başlangıç Rengi ve Ortalama Atama
         teams.forEach((t, i) => {
             t.originalIndex = i + 1;
             t.average = t.skillSum / t.players.length;
-            // Takımlara rastgele farklı renkler ata (ilk 10 renkten)
             t.fixtureColor = PRESET_COLORS[i % PRESET_COLORS.length]; 
         });
 
@@ -613,7 +714,7 @@
                 return `
                 <div class="team-member">
                     <div>${p.name} ${groupTag}</div>
-                    <span class="skill-badge">⭐ ${p.skill}</span>
+                    <span class="skill-badge">⭐ ${skillNames[p.skill]}</span>
                 </div>
                 `;
             }).join('');
@@ -628,33 +729,28 @@
         });
     }
 
-    // Fikstürdeki takım rengini değiştiren fonksiyon
     function changeFixtureTeamColor(teamOriginalIndex, newColor) {
         const team = globalTeams.find(t => t.originalIndex === teamOriginalIndex);
         if (team) {
             team.fixtureColor = newColor;
-            generateMatchesUI(); // Fikstürü yeni renkle tekrar çiz
+            generateMatchesUI(); 
         }
     }
 
-    // Fikstürdeki tek bir takım panelinin HTML'ini üreten yardımcı fonksiyon
     function getTeamFixtureHTML(team) {
         let playersHtml = team.players.map(p => {
             let groupTag = p.groupName ? `<span class="group-badge" style="background-color: ${groupColors[p.groupName]}">${p.groupName}</span>` : '';
-            return `<div class="match-player-row"><span>${p.name} ${groupTag}</span> <span>⭐ ${p.skill}</span></div>`;
+            return `<div class="match-player-row"><span>${p.name} ${groupTag}</span> <span style="font-weight:bold; color:#555; font-size:14px;">${skillNames[p.skill]}</span></div>`;
         }).join('');
 
-        // Takım rengini ayarlamak için mini palet
         let colorPickerHtml = PRESET_COLORS.map(c => 
             `<div class="color-swatch ${c === team.fixtureColor ? 'selected' : ''}" 
                   style="background-color: ${c}; width: 14px; height: 14px;" 
                   onclick="changeFixtureTeamColor(${team.originalIndex}, '${c}')"></div>`
         ).join('');
 
-        // Maksimum ustalık 3 olduğu için yüzde hesaplaması: (ortalama / 3) * 100
-        let powerPercentage = (team.average / 3) * 100;
+        let powerPercentage = (team.average / 5) * 100;
 
-        // Estetik detaylar: Seçilen renge göre border, shadow ve hafif arkaplan rengi
         return `
         <div class="match-team-panel" style="border-top: 5px solid ${team.fixtureColor}; background: linear-gradient(180deg, ${team.fixtureColor}10 0%, transparent 40%);">
             <div class="match-team-title">
@@ -669,7 +765,7 @@
             <div class="power-graph-container">
                 <div class="power-graph-label">
                     <span>Takım Gücü</span>
-                    <span style="color: ${team.fixtureColor}; font-size: 15px;">${team.average.toFixed(2)} / 3.00</span>
+                    <span style="color: ${team.fixtureColor}; font-size: 15px;">${team.average.toFixed(2)} / 5.00</span>
                 </div>
                 <div class="power-graph-bg">
                     <div class="power-graph-fill" style="width: ${powerPercentage}%; background-color: ${team.fixtureColor}; box-shadow: 0 0 8px ${team.fixtureColor};"></div>
@@ -685,7 +781,6 @@
             return;
         }
 
-        // Kopya dizi üzerinden sıralama yapıyoruz
         let teamsForMatch = [...globalTeams];
         teamsForMatch.sort((a, b) => b.average - a.average);
 
