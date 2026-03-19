@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1050px;
             margin: 0 auto;
             background: #fff;
             padding: 20px;
@@ -44,6 +44,12 @@
         }
         .left-panel {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 320px;
+        }
+        .panel-box {
             background: #fafafa;
             padding: 20px;
             border-radius: 6px;
@@ -58,7 +64,7 @@
             gap: 10px;
             margin-bottom: 20px;
         }
-        input[type="text"], input[type="number"].group-input {
+        input[type="text"] {
             flex: 1;
             padding: 8px;
             border: 1px solid #ccc;
@@ -150,6 +156,7 @@
         .team-member {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             padding: 5px 0;
             border-bottom: 1px dashed #eee;
         }
@@ -165,13 +172,14 @@
             color: #555;
         }
         .group-badge {
-            background: #f1c40f;
-            color: #333;
-            padding: 2px 6px;
+            color: #fff;
+            padding: 3px 7px;
             border-radius: 4px;
             font-size: 11px;
             font-weight: bold;
-            margin-left: 5px;
+            margin-left: 6px;
+            text-shadow: 0px 1px 2px rgba(0,0,0,0.4);
+            display: inline-block;
         }
         .matches-section {
             margin-top: 30px;
@@ -207,6 +215,43 @@
             font-size: 13px;
             margin-top: 5px;
         }
+        /* Yeni Grup Renk Ayarları */
+        .group-color-row {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #ddd;
+        }
+        .group-color-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .group-name-label {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .color-swatch-container {
+            display: flex;
+            gap: 6px;
+        }
+        .color-swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+        .color-swatch.selected {
+            border-color: #2c3e50;
+            transform: scale(1.15);
+            box-shadow: 0 0 4px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -222,20 +267,28 @@
 
     <div class="main-layout">
         <div class="left-panel">
-            <h3>Oyuncu Ekle</h3>
-            <div class="input-group">
-                <input type="text" id="playerName" placeholder="Oyuncu Adı" autocomplete="off">
-                <select id="playerSkill">
-                    <option value="1">1 (Acemi)</option>
-                    <option value="2">2 (Orta)</option>
-                    <option value="3" selected>3 (Usta)</option>
-                </select>
-                <input type="number" id="playerGroup" class="group-input" placeholder="Grup No (İsteğe Bağlı)" min="1">
-                <button onclick="addPlayer()" style="width: 100%;">Listeye Ekle</button>
+            <div class="panel-box">
+                <h3 style="margin-top:0;">Oyuncu Ekle</h3>
+                <div class="input-group">
+                    <input type="text" id="playerName" placeholder="Oyuncu Adı" autocomplete="off">
+                    <select id="playerSkill">
+                        <option value="1">1 (Acemi)</option>
+                        <option value="2">2 (Orta)</option>
+                        <option value="3" selected>3 (Usta)</option>
+                    </select>
+                    <input type="text" id="playerGroup" placeholder="Grup Adı (İsteğe Bağlı)" autocomplete="off">
+                    <button onclick="addPlayer()" style="width: 100%;">Listeye Ekle</button>
+                </div>
+                
+                <ul class="player-list" id="playerList">
+                    </ul>
             </div>
-            
-            <ul class="player-list" id="playerList">
-                </ul>
+
+            <div class="panel-box" id="groupColorsPanel" style="display: none;">
+                <h3 style="margin-top:0; font-size:15px;">Grup Renkleri</h3>
+                <div id="groupColorsContainer">
+                    </div>
+            </div>
         </div>
 
         <div class="right-panel">
@@ -253,7 +306,22 @@
 <script>
     let players = [];
     let playerIdCounter = 0;
-    let globalTeams = []; // Oluşturulan takımları maçlar için saklarız
+    let globalTeams = []; 
+
+    // Özel, canlı ve birbirinden farklı 10 renk
+    const PRESET_COLORS = [
+        '#ff4757', // Kırmızı
+        '#1e90ff', // Mavi
+        '#2ed573', // Yeşil
+        '#ffa502', // Turuncu
+        '#9b59b6', // Mor
+        '#ff6b81', // Pembe
+        '#1abc9c', // Turkuaz
+        '#eccc68', // Sarı
+        '#3742fa', // Lacivert
+        '#c23616'  // Bordo
+    ];
+    let groupColors = {}; // Hangi grubun hangi rengi kullandığını tutar
 
     function updateStatus() {
         const numTeams = parseInt(document.getElementById('numTeams').value) || 0;
@@ -279,28 +347,40 @@
         
         const name = nameInput.value.trim();
         const skill = parseInt(skillInput.value);
-        const groupId = groupInput.value.trim() !== '' ? parseInt(groupInput.value) : null;
+        const groupName = groupInput.value.trim();
 
         if (!name) {
             alert("Lütfen bir oyuncu adı girin.");
             return;
         }
 
+        // Eğer yeni bir grup eklendiyse ona otomatik renk ata
+        if (groupName && !groupColors[groupName]) {
+            let usedColors = Object.values(groupColors);
+            let availableColors = PRESET_COLORS.filter(c => !usedColors.includes(c));
+            // Eğer boş renk kalmadıysa başa dönüp ilk rengi ata
+            groupColors[groupName] = availableColors.length > 0 ? availableColors[0] : PRESET_COLORS[0];
+        }
+
         players.push({
             id: ++playerIdCounter,
             name: name,
             skill: skill,
-            groupId: groupId
+            groupName: groupName !== '' ? groupName : null
         });
 
         nameInput.value = '';
         groupInput.value = '';
         nameInput.focus();
+        
+        renderGroupPanel();
         renderPlayers();
     }
 
     function removePlayer(id) {
         players = players.filter(p => p.id !== id);
+        cleanUpGroups();
+        renderGroupPanel();
         renderPlayers();
     }
 
@@ -309,12 +389,78 @@
         if (player) player.skill = parseInt(newSkill);
     }
 
+    // Grup rengini değiştirme fonksiyonu
+    function changeGroupColor(groupName, newColor) {
+        groupColors[groupName] = newColor;
+        renderGroupPanel();
+        renderPlayers();
+        // Eğer takımlar zaten oluşturulduysa, renkleri takımlarda da güncelle
+        if (globalTeams.length > 0) {
+            renderTeams(globalTeams);
+        }
+    }
+
+    // Listede oyuncusu kalmayan grupları sistemden temizler
+    function cleanUpGroups() {
+        const activeGroups = new Set(players.filter(p => p.groupName).map(p => p.groupName));
+        for (let gName in groupColors) {
+            if (!activeGroups.has(gName)) {
+                delete groupColors[gName];
+            }
+        }
+    }
+
+    function renderGroupPanel() {
+        const panel = document.getElementById('groupColorsPanel');
+        const container = document.getElementById('groupColorsContainer');
+        const activeGroups = Object.keys(groupColors);
+
+        if (activeGroups.length === 0) {
+            panel.style.display = 'none';
+            container.innerHTML = '';
+            return;
+        }
+
+        panel.style.display = 'block';
+        container.innerHTML = '';
+
+        activeGroups.forEach(gName => {
+            const currentColor = groupColors[gName];
+            const row = document.createElement('div');
+            row.className = 'group-color-row';
+            
+            const label = document.createElement('span');
+            label.className = 'group-name-label';
+            label.textContent = gName;
+            
+            const swatchContainer = document.createElement('div');
+            swatchContainer.className = 'color-swatch-container';
+            
+            PRESET_COLORS.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch' + (color === currentColor ? ' selected' : '');
+                swatch.style.backgroundColor = color;
+                swatch.onclick = () => changeGroupColor(gName, color);
+                swatchContainer.appendChild(swatch);
+            });
+
+            row.appendChild(label);
+            row.appendChild(swatchContainer);
+            container.appendChild(row);
+        });
+    }
+
     function renderPlayers() {
         const list = document.getElementById('playerList');
         list.innerHTML = '';
 
         players.forEach(player => {
-            const groupTag = player.groupId ? `<span class="group-badge">Grup ${player.groupId}</span>` : '';
+            let groupTag = '';
+            if (player.groupName) {
+                const color = groupColors[player.groupName];
+                groupTag = `<span class="group-badge" style="background-color: ${color}">${player.groupName}</span>`;
+            }
+
             const li = document.createElement('li');
             li.className = 'player-item';
             
@@ -348,61 +494,51 @@
             return;
         }
 
-        // Arayüzü temizle
         document.getElementById('matchesContainer').innerHTML = '';
         document.getElementById('btnMatch').style.display = 'none';
 
-        // 1. Oyuncuları bağımsızlar ve gruplar olarak ayır
         const groups = {};
         const independents = [];
-
-        // Karıştırıp ayırıyoruz ki eşitlik durumunda rastgelelik sağlansın
         let shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
 
         shuffledPlayers.forEach(p => {
-            if (p.groupId) {
-                if (!groups[p.groupId]) groups[p.groupId] = [];
-                groups[p.groupId].push(p);
+            if (p.groupName) {
+                if (!groups[p.groupName]) groups[p.groupName] = [];
+                groups[p.groupName].push(p);
             } else {
                 independents.push(p);
             }
         });
 
-        // Hata kontrolü: Herhangi bir grup takım kapasitesinden büyük mü?
-        for (const gId in groups) {
-            if (groups[gId].length > teamSize) {
-                alert(`Hata: ${gId} numaralı gruptaki oyuncu sayısı (${groups[gId].length}), takım kapasitesinden (${teamSize}) fazla!`);
+        for (const gName in groups) {
+            if (groups[gName].length > teamSize) {
+                alert(`Hata: "${gName}" grubundaki oyuncu sayısı (${groups[gName].length}), takım kapasitesinden (${teamSize}) fazla!`);
                 return;
             }
         }
 
         let teams = Array.from({ length: numTeams }, () => ({ players: [], skillSum: 0 }));
 
-        // 2. Önce GRUPLARI yerleştir
         const groupArray = Object.values(groups).map(gPlayers => ({
             players: gPlayers,
             skillSum: gPlayers.reduce((sum, p) => sum + p.skill, 0),
             size: gPlayers.length
         }));
 
-        // Grupları toplam ustalığına göre büyükten küçüğe sırala
         groupArray.sort((a, b) => b.skillSum - a.skillSum);
 
         for (const group of groupArray) {
-            // Grubun sığabileceği takımları bul
             let availableTeams = teams.filter(t => t.players.length + group.size <= teamSize);
             
             if (availableTeams.length === 0) {
                 alert("Uyarı: Grupların boyutu mevcut boşluklara uymuyor. Lütfen grupları küçültün veya takım kapasitesini artırın.");
                 return;
             }
-            // En düşük ustalık toplamına sahip takıma yerleştir
             availableTeams.sort((a, b) => a.skillSum - b.skillSum);
             availableTeams[0].players.push(...group.players);
             availableTeams[0].skillSum += group.skillSum;
         }
 
-        // 3. Kalan BAĞIMSIZ oyuncuları yerleştir
         independents.sort((a, b) => b.skill - a.skill);
 
         independents.forEach(player => {
@@ -414,7 +550,7 @@
 
         globalTeams = teams;
         renderTeams(teams);
-        document.getElementById('btnMatch').style.display = 'block'; // Eşleştirme butonunu göster
+        document.getElementById('btnMatch').style.display = 'block'; 
     }
 
     function renderTeams(teams) {
@@ -426,12 +562,19 @@
             const teamCard = document.createElement('div');
             teamCard.className = 'team-card';
             
-            let playersHtml = team.players.map(p => `
+            let playersHtml = team.players.map(p => {
+                let groupTag = '';
+                if (p.groupName) {
+                    const color = groupColors[p.groupName];
+                    groupTag = `<span class="group-badge" style="background-color: ${color}">${p.groupName}</span>`;
+                }
+                return `
                 <div class="team-member">
-                    <span>${p.name} ${p.groupId ? `<span style="font-size:10px; color:#f39c12;">(G${p.groupId})</span>` : ''}</span>
+                    <div>${p.name} ${groupTag}</div>
                     <span class="skill-badge">Güç: ${p.skill}</span>
                 </div>
-            `).join('');
+                `;
+            }).join('');
 
             teamCard.innerHTML = `
                 <h3>Takım ${index + 1} <span style="float:right; font-size:12px; color:#7f8c8d; margin-top:2px;">Ort: ${average}</span></h3>
@@ -449,13 +592,11 @@
             return;
         }
 
-        // Maçları dengelemek için takımları ortalamalarına göre sırala
         let teamsForMatch = globalTeams.map((t, index) => ({
             originalIndex: index + 1,
             average: t.skillSum / t.players.length
         }));
 
-        // Ortalama güce göre sıralama (birbirine en yakın güçtekiler eşleşsin diye)
         teamsForMatch.sort((a, b) => b.average - a.average);
 
         const container = document.getElementById('matchesContainer');
@@ -473,7 +614,6 @@
                     </div>
                 `;
             } else {
-                // Eğer takım sayısı tek ise, sonuncu takım bay geçer
                 const t1 = teamsForMatch[i];
                 container.innerHTML += `
                     <div class="match-card" style="background-color: #fdfae6; border-color: #f1c40f;">
@@ -484,7 +624,6 @@
             }
         }
         
-        // Eşleşme tamamlandığında sayfayı aşağı kaydır
         container.scrollIntoView({ behavior: 'smooth' });
     }
 </script>
